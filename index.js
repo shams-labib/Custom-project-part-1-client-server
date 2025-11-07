@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const port = 3000;
 const app = express();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 app.use(express.json());
 app.use(cors());
@@ -29,6 +29,18 @@ async function run() {
     app.post("/products", async (req, res) => {
       const newUsers = req.body;
       const result = await productsCollection.insertOne(newUsers);
+      res.send(result);
+    });
+
+    app.get("/products", async (req, res) => {
+      const cursor = await productsCollection.find().toArray();
+      res.send(cursor);
+    });
+
+    app.get("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productsCollection.findOne(query);
       res.send(result);
     });
 
