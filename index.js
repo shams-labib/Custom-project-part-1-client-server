@@ -7,6 +7,25 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 app.use(express.json());
 app.use(cors());
 
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./firebaseToken.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+const verifyFirebaseToken = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res.status(401).send({ message: "Unauthorize access" });
+  }
+
+  const token = authorization.split(" ")[1];
+
+  next();
+};
+
 // Custom-project-part-1
 // R9lkVZ3cpw2mwQRY
 const uri =
@@ -32,15 +51,15 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/products", async (req, res) => {
+    app.get("/products", verifyFirebaseToken, async (req, res) => {
       const cursor = await productsCollection.find().toArray();
       res.send(cursor);
     });
 
     app.get("/products/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await productsCollection.findOne(query);
+      const filter = { _id: new ObjectId(id) };
+      const result = await productsCollection.findOne(filter);
       res.send(result);
     });
 
